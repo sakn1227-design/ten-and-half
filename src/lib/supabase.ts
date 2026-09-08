@@ -9,12 +9,16 @@ const hasPlaceholder = (value?: string) => !value || /YOUR_(PROJECT|KEY|LEGACY_A
 
 export const isConfigured = !hasPlaceholder(url) && !hasPlaceholder(key)
 
-export const supabase = isConfigured
-  ? createClient(url!, key!, {
-      auth: {
-        persistSession: true,
-        autoRefreshToken: true,
-        detectSessionInUrl: false,
-      },
-    })
-  : null
+// Always export a concrete client so application code does not need nullable
+// checks everywhere. When configuration is missing, the UI is gated by
+// `isConfigured` before any network action is attempted.
+const clientUrl = isConfigured ? url! : 'https://placeholder.supabase.co'
+const clientKey = isConfigured ? key! : 'placeholder-publishable-key'
+
+export const supabase = createClient(clientUrl, clientKey, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: false,
+  },
+})
